@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, File, UploadFile
 import pandas as pd
 
 app = FastAPI()
@@ -7,11 +7,13 @@ app = FastAPI()
 def health_check():
     return {"status": "ok", "message": "Python Microservice is running"}
 
-@app.post("/process")
-def process_data(payload: list[dict]):
-    # Convert incoming JSON data to a Pandas DataFrame
-    df = pd.DataFrame(payload)
+@app.post("/process-excel")
+async def process_excel(file: UploadFile = File(...)):
+    # Use the file.file attribute to access the raw Python file object
+    # Pandas can read this directly into a DataFrame
+    df = pd.read_excel(file.file)
     
-    # Example processing: clean/transform your data
+    # Example processing: clean/transform your data here
+    
     # Return processed records back as JSON
     return df.to_dict(orient="records")
