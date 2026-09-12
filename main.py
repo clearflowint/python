@@ -1,5 +1,7 @@
 from fastapi import FastAPI, File, UploadFile
 import pandas as pd
+import io
+from scripts.feeds_report import process_chalimeda_feeds # Import your new script
 
 app = FastAPI()
 
@@ -8,13 +10,15 @@ def health_check():
     return {"status": "ok", "message": "Python Microservice is running"}
 
 @app.post("/process-excel")
-async def process_excel(file: UploadFile = File(...)):
-    # 1. Read the Excel file
-    df = pd.read_excel(file.file)
+async def process_excel(scenario: str = "default", file: UploadFile = File(...)):
+    # Read the uploaded file into server memory
+    file_bytes = await file.read()
     
-    # 2. Fix the empty cell issue
-    # This replaces all NaN values with a safe, empty string
+    # Route the data based on the scenario requested by n8n
+    if scenario == "chalimeda_feeds":
+        return process_chalimeda_feeds(file_bytes)
+        
+    # Default fallback (if no specific scenario is provided)
+    df = pd.read_excel(io.BytesIO(file_bytes))
     df = df.fillna("")
-    
-    # 3. Return processed records back as JSON
-    return df.to_dict(orient="records")
+    return {"data": df.to_dict(orient="records")}
