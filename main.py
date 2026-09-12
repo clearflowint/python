@@ -9,11 +9,12 @@ def health_check():
 
 @app.post("/process-excel")
 async def process_excel(file: UploadFile = File(...)):
-    # Use the file.file attribute to access the raw Python file object
-    # Pandas can read this directly into a DataFrame
+    # 1. Read the Excel file
     df = pd.read_excel(file.file)
     
-    # Example processing: clean/transform your data here
+    # 2. Fix the empty cell issue
+    # This replaces all NaN values with a safe, empty string
+    df = df.fillna("")
     
-    # Return processed records back as JSON
+    # 3. Return processed records back as JSON
     return df.to_dict(orient="records")
